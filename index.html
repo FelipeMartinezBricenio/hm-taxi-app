@@ -7,7 +7,6 @@
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0d1b32">
     <link rel="apple-touch-icon" href="logo.png">
-    
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
@@ -33,6 +32,11 @@
 
         <main>
             <div class="status-tabs" id="status-tabs-container"></div>
+            
+            <button id="btn-nuevo-viaje" class="fab-button" onclick="abrirModalNuevoViaje()" style="display:none;">
+                <i class="fas fa-plus"></i>
+            </button>
+
             <div class="filters-container">
                 <div class="filter-group">
                     <div class="f-item">
@@ -60,8 +64,25 @@
                 <h3>Viajes: <span id="total-viajes">0</span></h3>
                 <button id="btn-liquidar-seleccion" class="btn-step btn-success" style="display:none;" onclick="liquidarSeleccionados()">Liquidar Selección</button>
             </div>
+
             <div id="viajes-list"></div>
         </main>
+
+        <div id="nuevo-viaje-modal" class="modal">
+            <div class="modal-content">
+                <h3><i class="fas fa-taxi"></i> Nuevo Servicio</h3>
+                <div class="f-item"><label>Chofer:</label><select id="reg-chofer"></select></div>
+                <div class="f-item"><label>Monto (S/):</label><input type="number" id="reg-monto" step="0.10"></div>
+                <div class="f-item"><label>Origen:</label><input type="text" id="reg-origen"></div>
+                <div class="f-item"><label>Parada 1:</label><input type="text" id="reg-p1"></div>
+                <div class="f-item"><label>Parada 2:</label><input type="text" id="reg-p2"></div>
+                <div class="f-item"><label>Destino:</label><input type="text" id="reg-destino"></div>
+                <div class="modal-actions">
+                    <button onclick="guardarNuevoViaje()" class="btn-save">Guardar</button>
+                    <button onclick="cerrarModalNuevoViaje()" class="btn-cancel">Cancelar</button>
+                </div>
+            </div>
+        </div>
 
         <div id="pago-modal" class="modal">
             <div class="modal-content">
@@ -84,12 +105,7 @@
             </div>
         </div>
     </div>
-
     <script src="app.js"></script>
-    <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js');
-        }
-    </script>
+    <script>if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }</script>
 </body>
 </html>

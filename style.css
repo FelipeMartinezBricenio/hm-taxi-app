@@ -3,325 +3,65 @@
     --hm-navy: #0d1b32;
     --bg: #f4f7f6;
     --success: #27ae60;
+    --danger: #e74c3c;
     --maps-blue: #4285F4;
 }
 
-body {
-    font-family: 'Segoe UI', sans-serif;
-    background: var(--bg);
-    margin: 0;
-}
+body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; }
 
-.auth-wrapper {
-    height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--hm-navy);
-}
-
-.auth-card {
-    background: white;
-    padding: 30px;
-    border-radius: 15px;
-    text-align: center;
-    width: 300px;
-}
-
-.login-logo {
-    width: 120px;
-    margin-bottom: 20px;
-}
-
-.input-group {
-    background: #f0f0f0;
-    border-radius: 8px;
-    margin-bottom: 12px;
-    display: flex;
-    align-items: center;
-    padding: 0 12px;
-}
-
-.input-group input {
-    border: none;
-    background: transparent;
-    padding: 12px 8px;
-    width: 100%;
-    outline: none;
-}
-
-.btn-login {
-    width: 100%;
-    padding: 12px;
-    background: var(--hm-orange);
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-weight: bold;
-    cursor: pointer;
-}
-
-.main-header {
-    background: var(--hm-navy);
-    color: white;
-    padding: 15px 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.filters-container {
-    background: white;
-    padding: 15px 20px;
-    margin: 10px;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-}
-
-.filter-group {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 15px;
-}
-
-.f-item {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-}
-
-.f-item label {
-    font-size: 0.7rem;
-    font-weight: bold;
-    color: var(--hm-navy);
-    text-transform: uppercase;
-}
-
-.f-item select, .f-item input {
-    padding: 8px;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    outline: none;
-    font-family: inherit;
-}
-
-.f-item select:focus, .f-item input:focus {
-    border-color: var(--hm-orange);
-}
-
-.status-tabs {
-    display: flex;
-    overflow-x: auto;
-    background: white;
-    padding: 10px;
-    gap: 8px;
-    border-bottom: 1px solid #ddd;
-    position: sticky;
-    top: 0;
-    z-index: 10;
-}
-
-.tab-btn {
-    white-space: nowrap;
-    padding: 8px 16px;
-    border: none;
-    border-radius: 20px;
-    cursor: pointer;
-    font-weight: bold;
-    background: #eee;
-}
-
-.tab-btn.active {
-    background: var(--hm-orange);
-    color: white;
-}
-
-.group-header {
-    background: var(--hm-navy);
-    color: white;
-    padding: 10px 15px;
-    margin: 20px 10px 5px 10px;
-    border-radius: 8px;
-    font-size: 0.85rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.group-header span {
-    background: var(--hm-orange);
-    padding: 2px 10px;
-    border-radius: 15px;
-    font-size: 0.75rem;
-}
-
-.stats-bar {
-    padding: 5px 15px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.viajes-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
-    gap: 15px;
-    padding: 15px;
-}
-
-.viaje-card {
-    background: white;
-    border-radius: 12px;
-    border-left: 6px solid #ccc;
-    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.08);
-}
-
-.v-header {
-    padding: 12px 15px;
-    border-bottom: 1px solid #eee;
-    display: flex;
-    justify-content: space-between;
-    font-weight: bold;
-}
-
-.v-body {
-    padding: 15px;
-}
-
-.ruta-contenedor {
-    display: flex;
-    flex-direction: column;
-}
-
-.ruta-item {
-    display: flex;
-    gap: 12px;
-    align-items: flex-start;
-}
-
-.ruta-icon-wrapper {
-    width: 18px;
-    display: flex;
-    justify-content: center;
-    padding-top: 4px;
-}
-
-.ruta-texto {
-    display: flex;
-    flex-direction: column;
-    font-size: 0.8rem;
-    line-height: 1.2;
-}
-
-.ruta-texto small {
-    color: #999;
-    font-size: 0.6rem;
-    text-transform: uppercase;
-}
-
-.ruta-texto span {
-    font-weight: 500;
-    color: #333;
-}
-
-.ruta-linea {
-    width: 2px;
-    height: 10px;
-    background: #ddd;
-    margin-left: 8px;
-}
-
-.info-footer-card {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.75rem;
-    color: #888;
-    border-top: 1px solid #eee;
-    padding-top: 10px;
-    margin-top: 10px;
-}
-
-.v-footer {
-    padding: 10px 15px;
-    background: #fafafa;
-    border-radius: 0 0 12px 12px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.v-actions {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-}
-
-.btn-step {
-    padding: 8px 14px;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: bold;
-    background: var(--hm-navy);
-    color: white;
-}
-
-.btn-success { background: var(--success); }
-
-/* BOTÓN MAPA */
-.btn-nav {
-    background: var(--maps-blue);
-    color: white;
-    text-decoration: none;
-    padding: 8px 12px;
-    border-radius: 6px;
-    font-size: 0.75rem;
-    font-weight: bold;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-}
-
-.modal {
+/* Botón Flotante */
+.fab-button {
     position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.6);
-    display: none;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-}
-
-.modal-content {
-    background: white;
-    padding: 25px;
-    border-radius: 15px;
-    width: 300px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.modal-actions { display: flex; gap: 10px; }
-
-.btn-save {
-    flex: 2;
-    background: var(--hm-navy);
+    bottom: 25px;
+    right: 25px;
+    width: 60px;
+    height: 60px;
+    background: var(--hm-orange);
     color: white;
+    border-radius: 50%;
     border: none;
-    padding: 12px;
-    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    font-size: 24px;
     cursor: pointer;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.btn-cancel {
-    flex: 1;
-    background: #eee;
-    border: none;
-    padding: 12px;
-    border-radius: 8px;
-    cursor: pointer;
-}
+.auth-wrapper { height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--hm-navy); }
+.auth-card { background: white; padding: 30px; border-radius: 15px; text-align: center; width: 300px; }
+.login-logo { width: 120px; margin-bottom: 20px; }
+
+.main-header { background: var(--hm-navy); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
+
+.filters-container { background: white; padding: 15px; margin: 10px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+.filter-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; }
+
+.f-item { display: flex; flex-direction: column; gap: 5px; margin-bottom: 10px; }
+.f-item label { font-size: 0.7rem; font-weight: bold; color: var(--hm-navy); }
+.f-item input, .f-item select { padding: 10px; border: 1px solid #ddd; border-radius: 8px; }
+
+.status-tabs { display: flex; overflow-x: auto; background: white; padding: 10px; gap: 8px; border-bottom: 1px solid #ddd; position: sticky; top: 0; z-index: 10; }
+.tab-btn { white-space: nowrap; padding: 8px 16px; border: none; border-radius: 20px; cursor: pointer; font-weight: bold; background: #eee; }
+.tab-btn.active { background: var(--hm-orange); color: white; }
+
+.viajes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 15px; padding: 15px; }
+.viaje-card { background: white; border-radius: 12px; border-left: 6px solid #ccc; box-shadow: 0 3px 6px rgba(0,0,0,0.08); }
+
+.ruta-contenedor { display: flex; flex-direction: column; gap: 5px; }
+.ruta-item { display: flex; gap: 10px; font-size: 0.8rem; }
+
+.v-footer { padding: 10px 15px; background: #fafafa; border-radius: 0 0 12px 12px; display: flex; justify-content: space-between; align-items: center; }
+.v-actions { display: flex; gap: 8px; align-items: center; }
+
+.btn-nav { background: var(--maps-blue); color: white; padding: 8px 12px; border-radius: 6px; text-decoration: none; font-size: 0.75rem; font-weight: bold; }
+.btn-delete { background: none; border: none; color: var(--danger); cursor: pointer; padding: 5px; font-size: 1rem; }
+.btn-step { padding: 8px 14px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; background: var(--hm-navy); color: white; }
+
+.modal { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 20px; }
+.modal-content { background: white; padding: 20px; border-radius: 15px; width: 100%; max-width: 350px; max-height: 90vh; overflow-y: auto; }
+.modal-actions { display: flex; gap: 10px; margin-top: 15px; }
 
 .st-border-disponible { border-left-color: #3498db; }
 .st-border-en-camino { border-left-color: #f1c40f; }
