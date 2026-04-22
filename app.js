@@ -14,9 +14,8 @@ function showApp() {
     document.getElementById('user-role').innerText = currentUser.rol;
     renderTabs();
     if (currentUser.rol === 'admin') {
-        document.getElementById('admin-only-filter').style.display = 'block';
         document.getElementById('btn-nuevo-viaje').style.display = 'flex';
-        cargarChoferesEnListas();
+        cargarChoferesFormulario();
     }
     fetchViajes();
 }
@@ -27,11 +26,13 @@ function renderTabs() {
         container.innerHTML = `
             <button class="tab-btn active" onclick="setStatusFilter('activos', this)">ACTIVOS</button>
             <button class="tab-btn" onclick="setStatusFilter('finalizados', this)">POR CERRAR</button>
-            <button class="tab-btn" onclick="setStatusFilter('por_liquidar', this)">PARA LIQUIDAR</button>
             <button class="tab-btn" onclick="setStatusFilter('liquidados', this)">LIQUIDADOS</button>
         `;
     } else {
-        container.innerHTML = `<button class="tab-btn active" onclick="setStatusFilter('activos', this)">MIS VIAJES</button><button class="tab-btn" onclick="setStatusFilter('terminados', this)">HISTORIAL</button>`;
+        container.innerHTML = `
+            <button class="tab-btn active" onclick="setStatusFilter('activos', this)">MIS VIAJES</button>
+            <button class="tab-btn" onclick="setStatusFilter('terminados', this)">HISTORIAL</button>
+        `;
     }
 }
 
@@ -44,64 +45,49 @@ function setStatusFilter(tab, btn) {
 
 async function fetchViajes() {
     const contenedor = document.getElementById('viajes-list');
-    const fFecha = document.getElementById('filter-fecha').value;
-    const modoAgrupacion = document.getElementById('group-by').value;
     let query = `?select=*&order=id.desc`;
 
     if (currentTab === 'activos') query += `&estado=in.("disponible","aceptado","en camino")`;
     else if (currentTab === 'finalizados') query += `&estado=eq.finalizado`;
-    else if (currentTab === 'por_liquidar') query += `&estado=eq.cerrado`;
     else if (currentTab === 'liquidados') query += `&estado=eq.liquidado`;
-    else if (currentTab === 'terminados') query += `&estado=in.("finalizado","cerrado","liquidado")`;
+    else if (currentTab === 'terminados') query += `&estado=in.("finalizado","liquidado")`;
 
     if (currentUser.rol !== 'admin') query += `&chofer=eq.${currentUser.nombre}`;
-    else {
-        const fChofer = document.getElementById('filter-chofer').value;
-        if (fChofer) query += `&chofer=eq.${fChofer}`;
-    }
-    if (fFecha) query += `&fecha=eq.${fFecha.replace(/-/g, '')}`;
 
     const res = await fetch(`${SUPABASE_URL}/rest/v1/viajes${query}`, {
         headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
     });
     const viajes = await res.json();
-    document.getElementById('total-viajes').innerText = viajes.length;
-    contenedor.innerHTML = '';
-
-    if (modoAgrupacion === 'lista') {
-        const grid = document.createElement('div'); grid.className = 'viajes-grid';
-        renderLista(viajes, grid);
-        contenedor.appendChild(grid);
-    } else {
-        renderAgrupado(viajes, contenedor, modoAgrupacion);
-    }
+    contenedor.innerHTML = '<div class="viajes-grid"></div>';
+    renderLista(viajes, contenedor.firstChild);
 }
 
 function renderLista(viajes, parent) {
     viajes.forEach(v => {
         const card = document.createElement('div');
         const statusClass = `st-border-${v.estado.replace(/\s+/g, '-')}`;
+
         const trayecto = [
-            { dir: v.direccion_origen, label: 'Inicio' },
-            { dir: v.direccion_parada1, label: 'P1' },
-            { dir: v.direccion_parada2, label: 'P2' },
-            { dir: v.direccion_destino, label: 'Fin' }
+            { dir: v.direccion_origen, label: 'Inicio', class: '' },
+            { dir: v.direccion_parada1, label: 'P1', class: '' },
+            { dir: v.direccion_parada2, label: 'P2', class: '' },
+            { dir: v.direccion_destino, label: 'Destino', class: 'destino' }
         ].filter(p => p.dir && p.dir.toString().trim() !== "" && p.dir !== "null");
 
         const destinoFinal = trayecto[trayecto.length - 1]?.dir || "";
-        const urlMaps = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(destinoFinal)}`;
+        const urlMaps = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(destinoFinal)}`;
 
         card.className = `viaje-card ${statusClass}`;
         card.innerHTML = `
             <div class="v-header">
-                <span>${currentTab === 'por_liquidar' ? `<input type="checkbox" class="liq-check" value="${v.id}"> ` : ''}#${v.id}</span>
-                <span>S/ ${v.monto}</span>
+                <span style="color:#999">#${v.id}</span>
+                <span class="monto-badge">S/ ${v.monto}</span>
             </div>
             <div class="v-body">
                 <div class="ruta-contenedor">
-                    ${trayecto.map(p => `<div class="ruta-item"><b>${p.label}:</b> ${p.dir}</div>`).join('')}
+                    ${trayecto.map(p => `<div class="ruta-item ${p.class}"><b>${p.label}</b><span>${p.dir}</span></div>`).join('')}
                 </div>
-                <div class="info-footer-card">
+                <div style="display:flex; justify-content:space-between; font-size:0.7rem; color:#999; margin-top:10px; border-top:1px solid #eee; padding-top:8px;">
                     <span><i class="fas fa-user"></i> ${v.chofer}</span>
                     <span><i class="fas fa-calendar"></i> ${v.fecha}</span>
                 </div>
@@ -109,7 +95,7 @@ function renderLista(viajes, parent) {
             <div class="v-footer">
                 <div class="v-actions">
                     ${currentUser.rol === 'admin' ? `<button class="btn-delete" onclick="eliminarViaje(${v.id})"><i class="fas fa-trash"></i></button>` : ''}
-                    ${(v.estado !== 'liquidado' && v.estado !== 'cerrado') ? `<a href="${urlMaps}" target="_blank" class="btn-nav">Mapa</a>` : ''}
+                    ${(v.estado !== 'liquidado') ? `<a href="${urlMaps}" target="_blank" class="btn-nav"><i class="fab fa-google"></i> Mapa</a>` : ''}
                 </div>
                 <div class="v-actions">${renderBotones(v)}</div>
             </div>
@@ -120,16 +106,24 @@ function renderLista(viajes, parent) {
 
 function renderBotones(v) {
     if (v.estado === 'liquidado') return '<i class="fas fa-check-double" style="color:var(--success)"></i>';
-    if (currentUser.rol === 'admin') {
-        if (v.estado === 'finalizado') return `<button class="btn-step" onclick="updateEstado(${v.id}, 'cerrado')">Cerrar</button>`;
-        return `<span class="v-status">${v.estado}</span>`;
+    if (currentUser.rol === 'admin' && v.estado === 'finalizado') {
+        return `<button class="btn-step" onclick="updateEstado(${v.id}, 'liquidado')">Liquidar</button>`;
     }
-    if (v.estado === 'en camino') return `<button class="btn-step btn-success" onclick="abrirModalPago(${v.id}, ${v.monto})">Cobrar</button>`;
+    if (v.estado === 'en camino') return `<button class="btn-step" style="background:var(--success)" onclick="abrirModalPago(${v.id}, ${v.monto})">Cobrar</button>`;
+
     const flujo = { 'disponible': 'aceptado', 'aceptado': 'en camino' };
-    return flujo[v.estado] ? `<button class="btn-step" onclick="updateEstado(${v.id}, '${flujo[v.estado]}')">${flujo[v.estado]}</button>` : `<span class="v-status">${v.estado}</span>`;
+    return flujo[v.estado] ? `<button class="btn-step" onclick="updateEstado(${v.id}, '${flujo[v.estado]}')">${flujo[v.estado]}</button>` : `<span style="font-size:0.7rem; color:#999">${v.estado}</span>`;
 }
 
-// --- FUNCIONES ADMIN: NUEVO VIAJE ---
+// --- ADMIN: NUEVO VIAJE ---
+async function cargarChoferesFormulario() {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/usuarios?rol=eq.chofer`, {
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+    });
+    const d = await res.json();
+    document.getElementById('reg-chofer').innerHTML = d.map(c => `<option value="${c.nombre}">${c.nombre}</option>`).join('');
+}
+
 function abrirModalNuevoViaje() { document.getElementById('nuevo-viaje-modal').style.display = 'flex'; }
 function cerrarModalNuevoViaje() { document.getElementById('nuevo-viaje-modal').style.display = 'none'; }
 
@@ -144,36 +138,25 @@ async function guardarNuevoViaje() {
         estado: 'disponible',
         fecha: new Date().toISOString().split('T')[0].replace(/-/g, '')
     };
-
-    if(!v.monto || !v.direccion_origen || !v.direccion_destino) return alert("Completa los campos obligatorios");
+    if (!v.monto || !v.direccion_origen || !v.direccion_destino) return alert("Completa los campos requeridos");
 
     const res = await fetch(`${SUPABASE_URL}/rest/v1/viajes`, {
         method: 'POST',
         headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
         body: JSON.stringify(v)
     });
-    if(res.ok) { cerrarModalNuevoViaje(); fetchViajes(); }
+    if (res.ok) { cerrarModalNuevoViaje(); fetchViajes(); }
 }
 
 async function eliminarViaje(id) {
-    if(!confirm(`¿Estás seguro de eliminar el viaje #${id}? Esta acción no se puede deshacer.`)) return;
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/viajes?id=eq.${id}`, {
+    if (!confirm(`¿Eliminar viaje #${id}?`)) return;
+    await fetch(`${SUPABASE_URL}/rest/v1/viajes?id=eq.${id}`, {
         method: 'DELETE',
         headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
     });
-    if(res.ok) fetchViajes();
+    fetchViajes();
 }
 
-async function cargarChoferesEnListas() {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/usuarios?rol=eq.chofer`, {
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
-    });
-    const d = await res.json();
-    document.getElementById('filter-chofer').innerHTML = '<option value="">Todos</option>' + d.map(c => `<option value="${c.nombre}">${c.nombre}</option>`).join('');
-    document.getElementById('reg-chofer').innerHTML = d.map(c => `<option value="${c.nombre}">${c.nombre}</option>`).join('');
-}
-
-// --- FUNCIONES COMUNES ---
 async function updateEstado(id, nuevo) {
     await fetch(`${SUPABASE_URL}/rest/v1/viajes?id=eq.${id}`, {
         method: 'PATCH',
@@ -183,17 +166,12 @@ async function updateEstado(id, nuevo) {
     fetchViajes();
 }
 
-function abrirModalPago(id, monto) { idViajeEnProceso = id; document.getElementById('pago-monto-label').innerText = `Total: S/ ${monto}`; document.getElementById('pago-modal').style.display = 'flex'; }
-function closePagoModal() { document.getElementById('pago-modal').style.display = 'none'; }
+function abrirModalPago(id, monto) { idViajeEnProceso = id; document.getElementById('pago-modal').style.display = 'flex'; }
+function cerrarModalPago() { document.getElementById('pago-modal').style.display = 'none'; }
+
 async function confirmarPago() {
-    const met = document.getElementById('pago-metodo').value;
-    const des = document.getElementById('pago-destino').value;
-    await fetch(`${SUPABASE_URL}/rest/v1/viajes?id=eq.${idViajeEnProceso}`, {
-        method: 'PATCH',
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ estado: 'finalizado', metodo_pago: met, pago_destino: des })
-    });
-    closePagoModal(); fetchViajes();
+    await updateEstado(idViajeEnProceso, 'finalizado');
+    cerrarModalPago();
 }
 
 async function handleLogin() {
@@ -204,21 +182,6 @@ async function handleLogin() {
     });
     const d = await res.json();
     if (d.length > 0) { localStorage.setItem('userSession', JSON.stringify(d[0])); location.reload(); }
-    else alert("Error");
+    else alert("Usuario o clave incorrecta");
 }
 function handleLogout() { localStorage.removeItem('userSession'); location.reload(); }
-function renderAgrupado(viajes, parent, prop) {
-    const grupos = {};
-    viajes.forEach(v => { 
-        let k = v[prop] || 'Sin asignar'; 
-        if (prop === 'fecha' && k !== 'Sin asignar') k = k.toString().replace(/(\d{4})(\d{2})(\d{2})/, '$3/$2/$1');
-        if(!grupos[k]) grupos[k] = []; grupos[k].push(v); 
-    });
-    for (let k in grupos) {
-        const section = document.createElement('div');
-        section.innerHTML = `<div class="group-header"><b>${k.toUpperCase()}</b> <span>${grupos[k].length}</span></div>`;
-        const grid = document.createElement('div'); grid.className = 'viajes-grid';
-        renderLista(grupos[k], grid);
-        section.appendChild(grid); parent.appendChild(section);
-    }
-}
