@@ -3,7 +3,6 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 
 let currentUser = JSON.parse(localStorage.getItem('userSession')) || null;
 let currentTab = 'activos';
-let idViajeEnProceso = null;
 
 document.addEventListener('DOMContentLoaded', () => { if (currentUser) showApp(); });
 
@@ -65,39 +64,42 @@ async function fetchViajes() {
 function renderLista(viajes, parent) {
     viajes.forEach(v => {
         const card = document.createElement('div');
-        const statusClass = `st-border-${v.estado.replace(/\s+/g, '-')}`;
-
         const trayecto = [
-            { dir: v.direccion_origen, label: 'Inicio', class: '' },
-            { dir: v.direccion_parada1, label: 'P1', class: '' },
-            { dir: v.direccion_parada2, label: 'P2', class: '' },
-            { dir: v.direccion_destino, label: 'Destino', class: 'destino' }
+            { dir: v.direccion_origen, label: 'Punto de Inicio', class: '' },
+            { dir: v.direccion_parada1, label: 'Parada 1', class: '' },
+            { dir: v.direccion_parada2, label: 'Parada 2', class: '' },
+            { dir: v.direccion_destino, label: 'Destino Final', class: 'destino' }
         ].filter(p => p.dir && p.dir.toString().trim() !== "" && p.dir !== "null");
 
         const destinoFinal = trayecto[trayecto.length - 1]?.dir || "";
         const urlMaps = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(destinoFinal)}`;
 
-        card.className = `viaje-card ${statusClass}`;
+        card.className = `viaje-card`;
         card.innerHTML = `
             <div class="v-header">
-                <span style="color:#999">#${v.id}</span>
+                <span style="font-size:0.8rem; font-weight:700; color:#94a3b8">#${v.id}</span>
                 <span class="monto-badge">S/ ${v.monto}</span>
             </div>
             <div class="v-body">
                 <div class="ruta-contenedor">
-                    ${trayecto.map(p => `<div class="ruta-item ${p.class}"><b>${p.label}</b><span>${p.dir}</span></div>`).join('')}
+                    ${trayecto.map(p => `
+                        <div class="ruta-item ${p.class}">
+                            <b>${p.label}</b>
+                            <span>${p.dir}</span>
+                        </div>
+                    `).join('')}
                 </div>
-                <div style="display:flex; justify-content:space-between; font-size:0.7rem; color:#999; margin-top:10px; border-top:1px solid #eee; padding-top:8px;">
+                <div style="display:flex; justify-content:space-between; margin-top:20px; font-size:0.75rem; color:#94a3b8;">
                     <span><i class="fas fa-user"></i> ${v.chofer}</span>
                     <span><i class="fas fa-calendar"></i> ${v.fecha}</span>
                 </div>
             </div>
             <div class="v-footer">
-                <div class="v-actions">
+                <div style="display:flex; gap:10px;">
                     ${currentUser.rol === 'admin' ? `<button class="btn-delete" onclick="eliminarViaje(${v.id})"><i class="fas fa-trash"></i></button>` : ''}
                     ${(v.estado !== 'liquidado') ? `<a href="${urlMaps}" target="_blank" class="btn-nav"><i class="fab fa-google"></i> Mapa</a>` : ''}
                 </div>
-                <div class="v-actions">${renderBotones(v)}</div>
+                <div>${renderBotones(v)}</div>
             </div>
         `;
         parent.appendChild(card);
@@ -105,17 +107,17 @@ function renderLista(viajes, parent) {
 }
 
 function renderBotones(v) {
-    if (v.estado === 'liquidado') return '<i class="fas fa-check-double" style="color:var(--success)"></i>';
+    if (v.estado === 'liquidado') return '<span style="color:var(--success); font-weight:bold"><i class="fas fa-check-circle"></i> PAGADO</span>';
     if (currentUser.rol === 'admin' && v.estado === 'finalizado') {
         return `<button class="btn-step" onclick="updateEstado(${v.id}, 'liquidado')">Liquidar</button>`;
     }
-    if (v.estado === 'en camino') return `<button class="btn-step" style="background:var(--success)" onclick="abrirModalPago(${v.id}, ${v.monto})">Cobrar</button>`;
-
+    if (v.estado === 'en camino') return `<button class="btn-step" style="background:var(--success)" onclick="updateEstado(${v.id}, 'finalizado')">Cobrar</button>`;
+    
     const flujo = { 'disponible': 'aceptado', 'aceptado': 'en camino' };
-    return flujo[v.estado] ? `<button class="btn-step" onclick="updateEstado(${v.id}, '${flujo[v.estado]}')">${flujo[v.estado]}</button>` : `<span style="font-size:0.7rem; color:#999">${v.estado}</span>`;
+    return flujo[v.estado] ? `<button class="btn-step" onclick="updateEstado(${v.id}, '${flujo[v.estado]}')">${flujo[v.estado].toUpperCase()}</button>` : `<span style="font-size:0.75rem; font-weight:bold; color:#cbd5e1">${v.estado.toUpperCase()}</span>`;
 }
 
-// --- ADMIN: NUEVO VIAJE ---
+// --- FUNCIONES ADMIN ---
 async function cargarChoferesFormulario() {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/usuarios?rol=eq.chofer`, {
         headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
@@ -138,18 +140,16 @@ async function guardarNuevoViaje() {
         estado: 'disponible',
         fecha: new Date().toISOString().split('T')[0].replace(/-/g, '')
     };
-    if (!v.monto || !v.direccion_origen || !v.direccion_destino) return alert("Completa los campos requeridos");
-
     const res = await fetch(`${SUPABASE_URL}/rest/v1/viajes`, {
         method: 'POST',
         headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
         body: JSON.stringify(v)
     });
-    if (res.ok) { cerrarModalNuevoViaje(); fetchViajes(); }
+    if(res.ok) { cerrarModalNuevoViaje(); fetchViajes(); }
 }
 
 async function eliminarViaje(id) {
-    if (!confirm(`¿Eliminar viaje #${id}?`)) return;
+    if(!confirm(`¿Eliminar viaje #${id}?`)) return;
     await fetch(`${SUPABASE_URL}/rest/v1/viajes?id=eq.${id}`, {
         method: 'DELETE',
         headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
@@ -166,14 +166,6 @@ async function updateEstado(id, nuevo) {
     fetchViajes();
 }
 
-function abrirModalPago(id, monto) { idViajeEnProceso = id; document.getElementById('pago-modal').style.display = 'flex'; }
-function cerrarModalPago() { document.getElementById('pago-modal').style.display = 'none'; }
-
-async function confirmarPago() {
-    await updateEstado(idViajeEnProceso, 'finalizado');
-    cerrarModalPago();
-}
-
 async function handleLogin() {
     const u = document.getElementById('user-input').value;
     const p = document.getElementById('pass-input').value;
@@ -182,6 +174,6 @@ async function handleLogin() {
     });
     const d = await res.json();
     if (d.length > 0) { localStorage.setItem('userSession', JSON.stringify(d[0])); location.reload(); }
-    else alert("Usuario o clave incorrecta");
 }
+
 function handleLogout() { localStorage.removeItem('userSession'); location.reload(); }

@@ -1,269 +1,239 @@
 :root {
     --hm-orange: #f37a1f;
     --hm-navy: #0d1b32;
-    --bg: #f0f2f5;
+    --bg: #f8fafc;
     --white: #ffffff;
-    --success: #2ecc71;
-    --danger: #e74c3c;
-    --text-main: #2c3e50;
-    --text-muted: #7f8c8d;
-    --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    --success: #10b981;
+    --danger: #ef4444;
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+    --radius: 16px;
 }
 
 body {
-    font-family: 'Segoe UI', Roboto, sans-serif;
+    font-family: 'Inter', -apple-system, sans-serif;
     background: var(--bg);
     margin: 0;
+    padding-bottom: 80px;
+    /* Espacio para el botón flotante */
     color: var(--text-main);
 }
 
-/* Header */
+/* Header Estilo Glassmorphism */
 .main-header {
     background: var(--hm-navy);
     color: white;
-    padding: 15px 20px;
+    padding: 18px 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-}
-
-.user-profile {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.user-profile i {
-    font-size: 1.5rem;
-    color: var(--hm-orange);
-}
-
-/* Tabs */
-.status-tabs {
-    display: flex;
-    overflow-x: auto;
-    background: white;
-    padding: 12px;
-    gap: 10px;
-    border-bottom: 1px solid #e0e0e0;
     position: sticky;
     top: 0;
-    z-index: 10;
+    z-index: 100;
+}
+
+.user-profile div {
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+#display-user {
+    color: var(--hm-orange);
+    font-weight: 700;
+}
+
+/* Tabs Modernos */
+.status-tabs {
+    display: flex;
+    gap: 12px;
+    padding: 15px;
+    overflow-x: auto;
+    background: var(--white);
+    border-bottom: 1px solid #e2e8f0;
 }
 
 .tab-btn {
-    white-space: nowrap;
-    padding: 8px 20px;
-    border: 1px solid #ddd;
-    border-radius: 25px;
-    cursor: pointer;
-    font-weight: 600;
-    background: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 30px;
+    background: #f1f5f9;
     color: var(--text-muted);
+    font-weight: 600;
+    font-size: 0.85rem;
+    white-space: nowrap;
     transition: 0.3s;
 }
 
 .tab-btn.active {
     background: var(--hm-orange);
     color: white;
-    border-color: var(--hm-orange);
+    box-shadow: 0 4px 12px rgba(243, 122, 31, 0.3);
 }
 
-/* Tarjetas */
+/* Grid de Viajes */
 .viajes-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 20px;
     padding: 15px;
+    display: grid;
+    gap: 20px;
 }
 
 .viaje-card {
     background: var(--white);
-    border-radius: 16px;
+    border-radius: var(--radius);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    border: 1px solid #f1f5f9;
     overflow: hidden;
-    box-shadow: var(--shadow);
-    border-left: 6px solid #ccc;
-}
-
-.st-border-disponible {
-    border-left-color: #3498db;
-}
-
-.st-border-en-camino {
-    border-left-color: #f1c40f;
-}
-
-.st-border-finalizado {
-    border-left-color: #e67e22;
-}
-
-.st-border-liquidado {
-    border-left-color: var(--success);
 }
 
 .v-header {
-    padding: 12px 15px;
-    background: #f8f9fa;
-    border-bottom: 1px solid #eee;
+    padding: 12px 18px;
+    background: #fcfcfd;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-weight: bold;
+    border-bottom: 1px solid #f1f5f9;
 }
 
 .monto-badge {
+    background: #ecfdf5;
     color: var(--success);
-    font-size: 1.1rem;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-weight: 700;
 }
 
-/* Timeline Ruta */
+/* Timeline de la Ruta (Mejorada) */
+.v-body {
+    padding: 18px;
+}
+
 .ruta-contenedor {
     position: relative;
-    padding-left: 25px;
-    margin: 10px 0;
+    padding-left: 28px;
 }
 
 .ruta-contenedor::before {
     content: '';
     position: absolute;
-    left: 7px;
+    left: 8px;
     top: 10px;
     bottom: 10px;
     width: 2px;
-    background: #dfe6e9;
+    background: #e2e8f0;
+    border-radius: 2px;
 }
 
 .ruta-item {
     position: relative;
-    margin-bottom: 12px;
+    margin-bottom: 16px;
+}
+
+.ruta-item:last-child {
+    margin-bottom: 0;
 }
 
 .ruta-item::before {
     content: '';
     position: absolute;
-    left: -22px;
-    top: 4px;
-    width: 10px;
-    height: 10px;
+    left: -24px;
+    top: 5px;
+    width: 12px;
+    height: 12px;
     border-radius: 50%;
-    background: var(--hm-navy);
-    border: 2px solid white;
-    box-shadow: 0 0 0 2px #dfe6e9;
+    background: white;
+    border: 3px solid var(--hm-navy);
+    z-index: 2;
 }
 
 .ruta-item.destino::before {
-    background: var(--success);
+    border-color: var(--success);
 }
 
 .ruta-item b {
     display: block;
     font-size: 0.65rem;
-    text-transform: uppercase;
     color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .ruta-item span {
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     font-weight: 500;
+    color: var(--text-main);
 }
 
+/* Footer y Botones */
 .v-footer {
-    padding: 12px 15px;
-    background: #fdfdfd;
-    border-top: 1px solid #eee;
+    padding: 12px 18px;
+    background: #f8fafc;
     display: flex;
     justify-content: space-between;
+    align-items: center;
 }
 
 .btn-nav {
-    background: #4285F4;
+    background: #2563eb;
     color: white;
-    padding: 8px 12px;
-    border-radius: 8px;
+    padding: 8px 16px;
+    border-radius: 10px;
     text-decoration: none;
+    font-weight: 600;
     font-size: 0.8rem;
     display: flex;
     align-items: center;
-    gap: 5px;
-    font-weight: 600;
+    gap: 6px;
 }
 
 .btn-step {
+    border: none;
+    padding: 10px 20px;
+    border-radius: 10px;
     background: var(--hm-navy);
     color: white;
-    border: none;
-    padding: 10px 15px;
-    border-radius: 8px;
+    font-weight: 700;
     cursor: pointer;
-    font-weight: bold;
 }
 
 .btn-delete {
     color: var(--danger);
-    background: #fff5f5;
+    background: #fee2e2;
     border: none;
-    border-radius: 8px;
     padding: 8px;
-    cursor: pointer;
+    border-radius: 8px;
 }
 
-/* Botón Flotante */
+/* Botón Flotante "+" */
 .fab-button {
     position: fixed;
-    bottom: 25px;
+    bottom: 30px;
     right: 25px;
-    width: 60px;
-    height: 60px;
+    width: 64px;
+    height: 64px;
     background: var(--hm-orange);
     color: white;
     border-radius: 50%;
     border: none;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-    font-size: 24px;
-    z-index: 100;
+    box-shadow: 0 10px 25px rgba(243, 122, 31, 0.4);
+    font-size: 28px;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
 /* Modales */
-.modal {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.7);
-    display: none;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-    padding: 20px;
-}
-
 .modal-content {
     background: white;
-    padding: 20px;
-    border-radius: 15px;
-    width: 100%;
-    max-width: 380px;
-    max-height: 90vh;
-    overflow-y: auto;
-}
-
-.f-item {
-    display: flex;
-    flex-direction: column;
-    margin-bottom: 12px;
-}
-
-.f-item label {
-    font-size: 0.75rem;
-    font-weight: bold;
-    margin-bottom: 4px;
+    padding: 25px;
+    border-radius: 24px;
+    width: 90%;
+    max-width: 400px;
 }
 
 .f-item input,
 .f-item select {
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
+    padding: 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    margin-top: 5px;
 }
