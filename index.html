@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>H&M Taxi Control Pro</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0d1b32">
+    <link rel="apple-touch-icon" href="logo.png">
+    
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div id="login-container" class="auth-wrapper">
+        <div class="auth-card">
+            <img src="logo.png" alt="H&M Logo" class="login-logo">
+            <h2>Acceso al Sistema</h2>
+            <div class="input-group"><i class="fas fa-user"></i><input type="text" id="user-input" placeholder="Usuario"></div>
+            <div class="input-group"><i class="fas fa-lock"></i><input type="password" id="pass-input" placeholder="Contraseña"></div>
+            <button onclick="handleLogin()" class="btn-login">Ingresar</button>
+        </div>
+    </div>
+
+    <div id="app-container" style="display: none;">
+        <header class="main-header">
+            <div class="user-profile">
+                <i class="fas fa-user-circle"></i>
+                <div><span id="display-user"></span> (<span id="user-role"></span>)</div>
+            </div>
+            <button onclick="handleLogout()" class="btn-logout"><i class="fas fa-power-off"></i></button>
+        </header>
+
+        <main>
+            <div class="status-tabs" id="status-tabs-container"></div>
+            <div class="filters-container">
+                <div class="filter-group">
+                    <div class="f-item">
+                        <label><i class="fas fa-layer-group"></i> Agrupar por:</label>
+                        <select id="group-by" onchange="fetchViajes()">
+                            <option value="lista">Sin Agrupar</option>
+                            <option value="chofer">Chofer</option>
+                            <option value="fecha">Fecha</option>
+                        </select>
+                    </div>
+                    <div class="f-item">
+                        <label><i class="fas fa-calendar-day"></i> Filtrar Fecha:</label>
+                        <input type="date" id="filter-fecha" onchange="fetchViajes()">
+                    </div>
+                    <div id="admin-only-filter" class="f-item" style="display:none;">
+                        <label><i class="fas fa-user-tie"></i> Filtrar Chofer:</label>
+                        <select id="filter-chofer" onchange="fetchViajes()">
+                            <option value="">Todos los conductores</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stats-bar">
+                <h3>Viajes: <span id="total-viajes">0</span></h3>
+                <button id="btn-liquidar-seleccion" class="btn-step btn-success" style="display:none;" onclick="liquidarSeleccionados()">Liquidar Selección</button>
+            </div>
+            <div id="viajes-list"></div>
+        </main>
+
+        <div id="pago-modal" class="modal">
+            <div class="modal-content">
+                <h3>Finalizar Viaje</h3>
+                <p id="pago-monto-label" style="font-weight:bold; color:var(--success)"></p>
+                <label>Método:</label>
+                <select id="pago-metodo">
+                    <option value="Efectivo">Efectivo</option>
+                    <option value="Virtual">Virtual (Yape/Plin)</option>
+                </select>
+                <label>¿Quién tiene el dinero?</label>
+                <select id="pago-destino">
+                    <option value="Chofer">Chofer</option>
+                    <option value="Dueño">Dueño</option>
+                </select>
+                <div class="modal-actions">
+                    <button onclick="confirmarPago()" class="btn-save">Confirmar</button>
+                    <button onclick="closePagoModal()" class="btn-cancel">Cancelar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js');
+        }
+    </script>
+</body>
+</html>
