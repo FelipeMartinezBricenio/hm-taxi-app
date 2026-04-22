@@ -1,11 +1,6 @@
 {
-  "name": "H&M Taxi Control",
   "short_name": "HM Taxi",
-  "description": "Sistema de gestión de flota H&M",
-  "start_url": "index.html",
-  "display": "standalone",
-  "background_color": "#0d1b32",
-  "theme_color": "#f37a1f",
+  "name": "H&M Servicio de Taxi",
   "icons": [
     {
       "src": "logo.png",
@@ -17,5 +12,11 @@
       "sizes": "512x512",
       "type": "image/png"
     }
-  ]
+  ],
+  "start_url": "index.html",
+  "background_color": "#0d1b32",
+  "display": "standalone",
+  "scope": "/",
+  "theme_color": "#0d1b32",
+  "description": "Sistema de gestión de viajes para H&M Taxi"
 }
