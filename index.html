@@ -7,49 +7,46 @@
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        /* Estilos críticos para asegurar carga inmediata */
         :root { --hm-orange: #f37a1f; --hm-navy: #0d1b32; --bg: #f1f5f9; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); color: #333; line-height: 1.5; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); color: #333; }
         
         .auth-wrapper { height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--hm-navy); padding: 20px; }
         .auth-card { background: white; padding: 30px; border-radius: 20px; width: 100%; max-width: 360px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
-        .auth-card h2 { margin-bottom: 20px; color: var(--hm-navy); font-size: 1.4rem; }
         
         .input-group { position: relative; margin-bottom: 15px; }
         .input-group i { position: absolute; left: 12px; top: 14px; color: #94a3b8; }
         .input-group input { width: 100%; padding: 12px 12px 12px 40px; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 1rem; outline: none; }
         
-        .btn-login { width: 100%; padding: 14px; background: var(--hm-orange); color: white; border: none; border-radius: 10px; font-weight: bold; font-size: 1rem; cursor: pointer; transition: 0.3s; }
+        .btn-login { width: 100%; padding: 14px; background: var(--hm-orange); color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; }
         
         .main-header { background: var(--hm-navy); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
         .btn-logout { background: transparent; border: 1px solid rgba(255,255,255,0.3); color: white; padding: 5px 10px; border-radius: 5px; }
         
-        /* Botón Flotante */
-        .fab-button { position: fixed; bottom: 25px; right: 20px; width: 60px; height: 60px; background: var(--hm-orange); color: white; border-radius: 50%; border: none; box-shadow: 0 8px 20px rgba(243,122,31,0.4); font-size: 24px; display: none; align-items: center; justify-content: center; z-index: 99; cursor: pointer; }
+        .fab-button { position: fixed; bottom: 25px; right: 20px; width: 60px; height: 60px; background: var(--hm-orange); color: white; border-radius: 50%; border: none; box-shadow: 0 8px 20px rgba(243,122,31,0.4); font-size: 24px; display: none; align-items: center; justify-content: center; z-index: 99; }
+        
+        .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:1000; align-items:center; justify-content:center; padding:20px; }
+        .modal-content { background:white; padding:25px; border-radius:20px; width:100%; max-width:400px; max-height: 90vh; overflow-y: auto; }
+        .f-group { margin-bottom: 12px; }
+        .f-group label { display: block; font-size: 0.8rem; font-weight: bold; margin-bottom: 4px; }
+        .f-group input, .f-group select { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd; font-size: 0.9rem; }
     </style>
 </head>
 <body>
     <div id="login-container" class="auth-wrapper">
         <div class="auth-card">
             <i class="fas fa-taxi" style="font-size: 3rem; color: var(--hm-orange); margin-bottom: 15px;"></i>
-            <h2>H&M Taxi Control</h2>
-            <div class="input-group">
-                <i class="fas fa-user"></i>
-                <input type="text" id="user-input" placeholder="Usuario">
-            </div>
-            <div class="input-group">
-                <i class="fas fa-lock"></i>
-                <input type="password" id="pass-input" placeholder="Contraseña">
-            </div>
-            <button onclick="handleLogin()" class="btn-login">Ingresar al Sistema</button>
+            <h2 style="margin-bottom:20px;">H&M Taxi Control</h2>
+            <div class="input-group"><i class="fas fa-user"></i><input type="text" id="user-input" placeholder="Usuario"></div>
+            <div class="input-group"><i class="fas fa-lock"></i><input type="password" id="pass-input" placeholder="Contraseña"></div>
+            <button onclick="handleLogin()" class="btn-login">Ingresar</button>
         </div>
     </div>
 
     <div id="app-container" style="display: none;">
         <header class="main-header">
-            <div class="user-profile">
-                <div style="font-size: 0.8rem; opacity: 0.8;">Bienvenido,</div>
+            <div>
+                <div style="font-size: 0.75rem; opacity: 0.8;">H&M Taxi Service</div>
                 <div style="font-weight: bold;"><span id="display-user"></span></div>
             </div>
             <button onclick="handleLogout()" class="btn-logout"><i class="fas fa-sign-out-alt"></i></button>
@@ -63,28 +60,18 @@
         </button>
     </div>
 
-    <div id="nuevo-viaje-modal" class="modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:1000; align-items:center; justify-content:center; padding:20px;">
-        <div style="background:white; padding:25px; border-radius:20px; width:100%; max-width:400px;">
-            <h3 style="margin-bottom:15px; color:var(--hm-navy);"><i class="fas fa-plus-circle"></i> Nuevo Viaje</h3>
-            <div style="margin-bottom:10px;">
-                <label style="font-size:0.8rem; font-weight:bold;">Chofer:</label>
-                <select id="reg-chofer" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;"></select>
-            </div>
-            <div style="margin-bottom:10px;">
-                <label style="font-size:0.8rem; font-weight:bold;">Monto (S/):</label>
-                <input type="number" id="reg-monto" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
-            </div>
-            <div style="margin-bottom:10px;">
-                <label style="font-size:0.8rem; font-weight:bold;">Origen:</label>
-                <input type="text" id="reg-origen" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
-            </div>
-            <div style="margin-bottom:10px;">
-                <label style="font-size:0.8rem; font-weight:bold;">Destino Final:</label>
-                <input type="text" id="reg-destino" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
-            </div>
+    <div id="nuevo-viaje-modal" class="modal">
+        <div class="modal-content">
+            <h3 style="margin-bottom:15px; color:var(--hm-navy); border-bottom: 2px solid var(--hm-orange); padding-bottom: 5px;">Nuevo Servicio</h3>
+            <div class="f-group"><label>Chofer:</label><select id="reg-chofer"></select></div>
+            <div class="f-group"><label>Monto (S/):</label><input type="number" id="reg-monto" step="0.10"></div>
+            <div class="f-group"><label>Origen:</label><input type="text" id="reg-origen" placeholder="Dirección inicio"></div>
+            <div class="f-group"><label>Parada 1 (Opcional):</label><input type="text" id="reg-p1"></div>
+            <div class="f-group"><label>Parada 2 (Opcional):</label><input type="text" id="reg-p2"></div>
+            <div class="f-group"><label>Destino Final:</label><input type="text" id="reg-destino" placeholder="Dirección fin"></div>
             <div style="display:flex; gap:10px; margin-top:20px;">
-                <button onclick="guardarNuevoViaje()" style="flex:1; padding:12px; background:var(--hm-orange); color:white; border:none; border-radius:10px; font-weight:bold;">Guardar</button>
-                <button onclick="cerrarModalNuevoViaje()" style="flex:1; padding:12px; background:#eee; border:none; border-radius:10px;">Cancelar</button>
+                <button onclick="guardarNuevoViaje()" style="flex:2; padding:12px; background:var(--hm-orange); color:white; border:none; border-radius:10px; font-weight:bold;">Guardar</button>
+                <button onclick="cerrarModalNuevoViaje()" style="flex:1; padding:12px; background:#eee; border:none; border-radius:10px;">Cerrar</button>
             </div>
         </div>
     </div>

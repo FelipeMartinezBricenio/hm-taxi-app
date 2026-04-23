@@ -16,9 +16,7 @@ async function handleLogin() {
     if (d.length > 0) {
         localStorage.setItem('userSession', JSON.stringify(d[0]));
         location.reload();
-    } else {
-        alert("Usuario o clave incorrecta");
-    }
+    } else { alert("Usuario o clave incorrecta"); }
 }
 
 function showApp() {
@@ -50,10 +48,8 @@ function setStatusFilter(tab, btn) {
 async function fetchViajes() {
     const contenedor = document.getElementById('viajes-list');
     let query = `?select=*&order=id.desc`;
-
     if (currentTab === 'activos') query += `&estado=in.("disponible","aceptado","en camino")`;
     else query += `&estado=eq.finalizado`;
-
     if (currentUser.rol !== 'admin') query += `&chofer=eq.${currentUser.nombre}`;
 
     const res = await fetch(`${SUPABASE_URL}/rest/v1/viajes${query}`, {
@@ -66,22 +62,37 @@ async function fetchViajes() {
 
 function renderLista(viajes, parent) {
     viajes.forEach(v => {
+        // Filtrado inteligente de la ruta
+        const puntos = [
+            { label: 'Origen', dir: v.direccion_origen },
+            { label: 'Parada 1', dir: v.direccion_parada1 },
+            { label: 'Parada 2', dir: v.direccion_parada2 },
+            { label: 'Destino', dir: v.direccion_destino }
+        ].filter(p => p.dir && p.dir.toString().trim() !== "" && p.dir !== "null");
+
         const card = document.createElement('div');
         card.className = 'viaje-card';
-        const urlMaps = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(v.direccion_destino)}`;
+        const urlMaps = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(v.direccion_destino)}`;
         
         card.innerHTML = `
-            <div class="v-header"><span>#${v.id}</span><b class="monto-badge">S/ ${v.monto}</b></div>
+            <div class="v-header"><span>ID #${v.id}</span><b class="monto-badge">S/ ${v.monto}</b></div>
             <div class="v-body">
                 <div class="ruta-contenedor">
-                    <div class="ruta-item"><b>Origen</b><span>${v.direccion_origen}</span></div>
-                    <div class="ruta-item destino"><b>Destino</b><span>${v.direccion_destino}</span></div>
+                    ${puntos.map((p, idx) => `
+                        <div class="ruta-item ${idx === puntos.length - 1 ? 'destino' : ''}">
+                            <b>${p.label}</b><span>${p.dir}</span>
+                        </div>
+                    `).join('')}
+                </div>
+                <div style="margin-top:12px; font-size:0.75rem; color:#94a3b8; display:flex; justify-content:space-between; border-top:1px solid #eee; padding-top:8px;">
+                    <span><i class="fas fa-user"></i> ${v.chofer}</span>
+                    <span><i class="fas fa-calendar"></i> ${v.fecha}</span>
                 </div>
             </div>
             <div class="v-footer">
                 <div style="display:flex; gap:8px;">
                     ${currentUser.rol === 'admin' ? `<button class="btn-delete" onclick="eliminarViaje(${v.id})"><i class="fas fa-trash"></i></button>` : ''}
-                    <a href="${urlMaps}" target="_blank" class="btn-nav"><i class="fab fa-google"></i> Mapa</a>
+                    <a href="${urlMaps}" target="_blank" class="btn-nav"><i class="fas fa-location-arrow"></i> Ir</a>
                 </div>
                 <div>${renderBotonAccion(v)}</div>
             </div>`;
@@ -91,7 +102,7 @@ function renderLista(viajes, parent) {
 
 function renderBotonAccion(v) {
     const flujo = { 'disponible': 'aceptado', 'aceptado': 'en camino', 'en camino': 'finalizado' };
-    if (v.estado === 'finalizado') return '<span style="color:#10b981; font-weight:bold;">✓ TERMINADO</span>';
+    if (v.estado === 'finalizado') return '<span style="color:#10b981; font-weight:bold;">✓ CERRADO</span>';
     return `<button class="btn-step" onclick="updateEstado(${v.id}, '${flujo[v.estado]}')">${flujo[v.estado].toUpperCase()}</button>`;
 }
 
@@ -105,7 +116,7 @@ async function updateEstado(id, nuevo) {
 }
 
 async function eliminarViaje(id) {
-    if(!confirm("¿Eliminar viaje?")) return;
+    if(!confirm("¿Borrar servicio?")) return;
     await fetch(`${SUPABASE_URL}/rest/v1/viajes?id=eq.${id}`, {
         method: 'DELETE',
         headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
@@ -128,12 +139,16 @@ async function cargarChoferesFormulario() {
 async function guardarNuevoViaje() {
     const v = {
         chofer: document.getElementById('reg-chofer').value,
-        monto: parseFloat(document.getElementById('reg-monto').value),
+        monto: parseFloat(document.getElementById('reg-monto').value) || 0,
         direccion_origen: document.getElementById('reg-origen').value,
+        direccion_parada1: document.getElementById('reg-p1').value || null,
+        direccion_parada2: document.getElementById('reg-p2').value || null,
         direccion_destino: document.getElementById('reg-destino').value,
         estado: 'disponible',
-        fecha: new Date().toISOString().split('T')[0]
+        fecha: new Date().toLocaleDateString('es-PE')
     };
+    if(!v.direccion_origen || !v.direccion_destino) return alert("Origen y Destino son obligatorios");
+    
     await fetch(`${SUPABASE_URL}/rest/v1/viajes`, {
         method: 'POST',
         headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
