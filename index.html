@@ -4,56 +4,81 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>H&M Taxi Control</title>
-    <link rel="stylesheet" href="style.css">
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
     <style>
         :root { --hm-orange: #f37a1f; --hm-navy: #0d1b32; --bg: #f1f5f9; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); color: #333; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); color: #333; overflow-x: hidden; }
         
+        /* Contenedor de Autenticación */
         .auth-wrapper { height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--hm-navy); padding: 20px; }
-        .auth-card { background: white; padding: 30px; border-radius: 20px; width: 100%; max-width: 360px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        .auth-card { background: white; padding: 30px; border-radius: 25px; width: 100%; max-width: 360px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         
         .input-group { position: relative; margin-bottom: 15px; }
-        .input-group i { position: absolute; left: 12px; top: 14px; color: #94a3b8; }
-        .input-group input { width: 100%; padding: 12px 12px 12px 40px; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 1rem; outline: none; }
+        .input-group i { position: absolute; left: 15px; top: 14px; color: #94a3b8; }
+        .input-group input { width: 100%; padding: 12px 12px 12px 45px; border: 1px solid #e2e8f0; border-radius: 12px; font-size: 1rem; outline: none; }
         
-        .btn-login { width: 100%; padding: 14px; background: var(--hm-orange); color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; }
+        .btn-login { width: 100%; padding: 15px; background: var(--hm-orange); color: white; border: none; border-radius: 12px; font-weight: bold; font-size: 1rem; cursor: pointer; }
         
-        .main-header { background: var(--hm-navy); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
-        .btn-logout { background: transparent; border: 1px solid rgba(255,255,255,0.3); color: white; padding: 5px 10px; border-radius: 5px; }
+        /* Layout de la App */
+        .main-header { background: var(--hm-navy); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; }
+        .btn-logout { background: rgba(255,255,255,0.1); border: none; color: white; padding: 8px 12px; border-radius: 8px; }
         
-        .fab-button { position: fixed; bottom: 25px; right: 20px; width: 60px; height: 60px; background: var(--hm-orange); color: white; border-radius: 50%; border: none; box-shadow: 0 8px 20px rgba(243,122,31,0.4); font-size: 24px; display: none; align-items: center; justify-content: center; z-index: 99; }
+        /* Estilos del Mapa integrado en la tarjeta */
+        .map-container { 
+            height: 200px; 
+            width: 100%; 
+            border-radius: 15px; 
+            margin: 10px 0; 
+            z-index: 1; 
+            border: 1px solid #ddd;
+            background: #eee; /* Fondo mientras carga */
+        }
+
+        /* Tabs de navegación */
+        .status-tabs { display: flex; gap: 10px; padding: 15px; overflow-x: auto; background: white; border-bottom: 1px solid #e2e8f0; }
+        .tab-btn { border: none; padding: 8px 20px; border-radius: 20px; background: #f1f5f9; color: #64748b; font-weight: 600; white-space: nowrap; cursor: pointer; }
+        .tab-btn.active { background: var(--hm-orange); color: white; }
+
+        /* Botón Flotante */
+        .fab-button { position: fixed; bottom: 30px; right: 20px; width: 60px; height: 60px; background: var(--hm-orange); color: white; border-radius: 50%; border: none; box-shadow: 0 8px 20px rgba(243,122,31,0.4); font-size: 24px; display: none; align-items: center; justify-content: center; z-index: 999; cursor: pointer; }
         
-        .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:1000; align-items:center; justify-content:center; padding:20px; }
-        .modal-content { background:white; padding:25px; border-radius:20px; width:100%; max-width:400px; max-height: 90vh; overflow-y: auto; }
+        /* Modales */
+        .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:2000; align-items:center; justify-content:center; padding:20px; }
+        .modal-content { background:white; padding:25px; border-radius:25px; width:100%; max-width:420px; max-height: 90vh; overflow-y: auto; }
         .f-group { margin-bottom: 12px; }
-        .f-group label { display: block; font-size: 0.8rem; font-weight: bold; margin-bottom: 4px; }
-        .f-group input, .f-group select { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd; font-size: 0.9rem; }
+        .f-group label { display: block; font-size: 0.85rem; font-weight: bold; margin-bottom: 5px; color: var(--hm-navy); }
+        .f-group input, .f-group select { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd; font-size: 0.95rem; }
     </style>
 </head>
 <body>
+
     <div id="login-container" class="auth-wrapper">
         <div class="auth-card">
-            <i class="fas fa-taxi" style="font-size: 3rem; color: var(--hm-orange); margin-bottom: 15px;"></i>
-            <h2 style="margin-bottom:20px;">H&M Taxi Control</h2>
+            <i class="fas fa-taxi" style="font-size: 3.5rem; color: var(--hm-orange); margin-bottom: 15px;"></i>
+            <h2 style="margin-bottom:25px; color: var(--hm-navy);">H&M Taxi System</h2>
             <div class="input-group"><i class="fas fa-user"></i><input type="text" id="user-input" placeholder="Usuario"></div>
             <div class="input-group"><i class="fas fa-lock"></i><input type="password" id="pass-input" placeholder="Contraseña"></div>
-            <button onclick="handleLogin()" class="btn-login">Ingresar</button>
+            <button onclick="handleLogin()" class="btn-login">ENTRAR</button>
         </div>
     </div>
 
     <div id="app-container" style="display: none;">
         <header class="main-header">
             <div>
-                <div style="font-size: 0.75rem; opacity: 0.8;">H&M Taxi Service</div>
-                <div style="font-weight: bold;"><span id="display-user"></span></div>
+                <div style="font-size: 0.7rem; opacity: 0.8; text-transform: uppercase; letter-spacing: 1px;">Panel de Control</div>
+                <div style="font-weight: bold; font-size: 1.1rem;"><span id="display-user"></span></div>
             </div>
-            <button onclick="handleLogout()" class="btn-logout"><i class="fas fa-sign-out-alt"></i></button>
+            <button onclick="handleLogout()" class="btn-logout"><i class="fas fa-power-off"></i></button>
         </header>
 
         <div class="status-tabs" id="status-tabs-container"></div>
-        <div id="viajes-list"></div>
+        
+        <main id="viajes-list"></main>
         
         <button id="btn-nuevo-viaje" class="fab-button" onclick="abrirModalNuevoViaje()">
             <i class="fas fa-plus"></i>
@@ -62,20 +87,22 @@
 
     <div id="nuevo-viaje-modal" class="modal">
         <div class="modal-content">
-            <h3 style="margin-bottom:15px; color:var(--hm-navy); border-bottom: 2px solid var(--hm-orange); padding-bottom: 5px;">Nuevo Servicio</h3>
-            <div class="f-group"><label>Chofer:</label><select id="reg-chofer"></select></div>
-            <div class="f-group"><label>Monto (S/):</label><input type="number" id="reg-monto" step="0.10"></div>
-            <div class="f-group"><label>Origen:</label><input type="text" id="reg-origen" placeholder="Dirección inicio"></div>
-            <div class="f-group"><label>Parada 1 (Opcional):</label><input type="text" id="reg-p1"></div>
-            <div class="f-group"><label>Parada 2 (Opcional):</label><input type="text" id="reg-p2"></div>
-            <div class="f-group"><label>Destino Final:</label><input type="text" id="reg-destino" placeholder="Dirección fin"></div>
-            <div style="display:flex; gap:10px; margin-top:20px;">
-                <button onclick="guardarNuevoViaje()" style="flex:2; padding:12px; background:var(--hm-orange); color:white; border:none; border-radius:10px; font-weight:bold;">Guardar</button>
-                <button onclick="cerrarModalNuevoViaje()" style="flex:1; padding:12px; background:#eee; border:none; border-radius:10px;">Cerrar</button>
+            <h3 style="margin-bottom:20px; color:var(--hm-navy);"><i class="fas fa-file-invoice"></i> Registrar Servicio</h3>
+            <div class="f-group"><label>Chofer asignado:</label><select id="reg-chofer"></select></div>
+            <div class="f-group"><label>Precio del servicio (S/):</label><input type="number" id="reg-monto" placeholder="0.00" step="0.10"></div>
+            <div class="f-group"><label>Punto de Recojo (Origen):</label><input type="text" id="reg-origen" placeholder="Dirección exacta"></div>
+            <div class="f-group"><label>Parada Intermedia 1 (Opc):</label><input type="text" id="reg-p1"></div>
+            <div class="f-group"><label>Parada Intermedia 2 (Opc):</label><input type="text" id="reg-p2"></div>
+            <div class="f-group"><label>Punto de Entrega (Destino):</label><input type="text" id="reg-destino" placeholder="Dirección exacta"></div>
+            
+            <div style="display:flex; gap:12px; margin-top:25px;">
+                <button onclick="guardarNuevoViaje()" style="flex:2; padding:15px; background:var(--hm-orange); color:white; border:none; border-radius:12px; font-weight:bold;">CREAR VIAJE</button>
+                <button onclick="cerrarModalNuevoViaje()" style="flex:1; padding:15px; background:#f1f5f9; color:#64748b; border:none; border-radius:12px; font-weight:bold;">CANCELAR</button>
             </div>
         </div>
     </div>
 
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
