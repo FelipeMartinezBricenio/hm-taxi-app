@@ -7,7 +7,7 @@ let mapsActive = {};
 
 document.addEventListener('DOMContentLoaded', () => { if (currentUser) showApp(); });
 
-// --- AUTENTICACIÓN ---
+// --- AUTH ---
 async function handleLogin() {
     const u = document.getElementById('user-input').value;
     const p = document.getElementById('pass-input').value;
@@ -15,10 +15,8 @@ async function handleLogin() {
         headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
     });
     const d = await res.json();
-    if (d.length > 0) {
-        localStorage.setItem('userSession', JSON.stringify(d[0]));
-        location.reload();
-    } else { alert("Usuario o clave incorrecta"); }
+    if (d.length > 0) { localStorage.setItem('userSession', JSON.stringify(d[0])); location.reload(); }
+    else { alert("Error"); }
 }
 
 function handleLogout() { localStorage.removeItem('userSession'); location.reload(); }
@@ -28,18 +26,14 @@ function showApp() {
     document.getElementById('app-container').style.display = 'block';
     document.getElementById('display-user').innerText = currentUser.nombre;
     renderTabs();
-    if (currentUser.rol === 'admin') {
-        document.getElementById('btn-nuevo-viaje').style.display = 'flex';
-        cargarChoferesFormulario();
-    }
+    if (currentUser.rol === 'admin') document.getElementById('btn-nuevo-viaje').style.display = 'flex';
+    if (currentUser.rol === 'admin') cargarChoferesFormulario();
     fetchViajes();
 }
 
 function renderTabs() {
     const container = document.getElementById('status-tabs-container');
-    container.innerHTML = currentUser.rol === 'admin' 
-        ? `<button class="tab-btn active" onclick="setStatusFilter('activos', this)">ACTIVOS</button><button class="tab-btn" onclick="setStatusFilter('finalizados', this)">HISTORIAL</button>`
-        : `<button class="tab-btn active" onclick="setStatusFilter('activos', this)">MIS VIAJES</button><button class="tab-btn" onclick="setStatusFilter('terminados', this)">HISTORIAL</button>`;
+    container.innerHTML = `<button class="tab-btn active" onclick="setStatusFilter('activos', this)">ACTIVOS</button><button class="tab-btn" onclick="setStatusFilter('finalizados', this)">HISTORIAL</button>`;
 }
 
 function setStatusFilter(tab, btn) {
@@ -49,7 +43,7 @@ function setStatusFilter(tab, btn) {
     fetchViajes();
 }
 
-// --- LÓGICA DE DATOS ---
+// --- DATA ---
 async function fetchViajes() {
     const contenedor = document.getElementById('viajes-list');
     let query = `?select=*&order=id.desc`;
@@ -77,105 +71,102 @@ function renderLista(viajes, parent) {
         if (v.direccion_destino) puntos.push({ label: 'Destino', dir: v.direccion_destino, status: v.estado, color: '#ef4444' });
 
         const card = document.createElement('div');
-        card.style.background = "#fff"; card.style.borderRadius = "20px"; card.style.boxShadow = "0 4px 15px rgba(0,0,0,0.08)"; card.style.overflow = "hidden";
+        card.style.background = "#fff"; card.style.borderRadius = "20px"; card.style.boxShadow = "0 4px 10px rgba(0,0,0,0.05)"; card.style.overflow = "hidden";
 
         const mapId = `map-${v.id}`;
         card.innerHTML = `
-            <div style="padding:15px; border-bottom:1px solid #f1f5f9; display:flex; justify-content:space-between; align-items:center;">
-                <span style="font-weight:bold; color:#0d1b32; font-size:0.9rem;">SERVICIO #${v.id}</span>
-                <span style="color:#f37a1f; font-weight:bold; background:#fff4eb; padding:5px 12px; border-radius:12px;">S/ ${v.monto}</span>
+            <div style="padding:15px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-weight:bold; font-size:0.8rem;">VIAJE #${v.id}</span>
+                <span style="color:var(--hm-orange); font-weight:bold;">S/ ${v.monto}</span>
             </div>
             <div style="padding:15px;">
-                <div style="border-left:2px solid #e2e8f0; margin-left:10px; padding-left:20px; position:relative;">
-                    ${puntos.map((p, idx) => `
-                        <div style="margin-bottom:12px; position:relative;">
+                <div style="border-left:2px solid #e2e8f0; margin-left:10px; padding-left:20px;">
+                    ${puntos.map(p => `
+                        <div style="margin-bottom:10px; position:relative;">
                             <div style="position:absolute; left:-27px; top:4px; width:12px; height:12px; border-radius:50%; background:${(p.status === 'completado' || p.status === 'finalizado') ? '#10b981' : p.color}; border:2px solid #fff;"></div>
-                            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                                <div style="flex:1;">
-                                    <b style="font-size:0.65rem; color:#94a3b8; text-transform:uppercase;">${p.label} ${p.status === 'completado' ? '✓' : ''}</b>
-                                    <div style="font-size:0.85rem; font-weight:500;">${p.dir}</div>
-                                </div>
-                                ${p.precio > 0 ? `<span style="font-size:0.75rem; font-weight:bold; color:#64748b; background:#f1f5f9; padding:2px 6px; border-radius:6px; margin-left:8px;">+ S/ ${p.precio}</span>` : ''}
+                            <div style="display:flex; justify-content:space-between;">
+                                <div style="flex:1;"><b style="font-size:0.6rem; color:#94a3b8;">${p.label}</b><div style="font-size:0.8rem;">${p.dir}</div></div>
+                                ${p.precio > 0 ? `<span style="font-size:0.7rem; font-weight:bold;">+ S/ ${p.precio}</span>` : ''}
                             </div>
                         </div>
                     `).join('')}
                 </div>
-                <div id="${mapId}" style="height:200px; width:100%; border-radius:15px; margin-top:10px; background:#f8fafc; border:1px solid #e2e8f0; z-index:1;"></div>
+                <div id="${mapId}" style="height:220px; width:100%; border-radius:15px; margin-top:10px; background:#f8fafc; z-index:1;"></div>
             </div>
-            <div style="padding:12px; background:#f8fafc; display:flex; justify-content:space-between;">
-                <a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(v.direccion_destino)}" target="_blank" style="text-decoration:none; background:#2563eb; color:white; padding:10px 15px; border-radius:10px; font-weight:bold; font-size:0.75rem;">GOOGLE MAPS</a>
-                <div>${renderBotonAccionInteligente(v)}</div>
+            <div style="padding:12px; background:#f8fafc; display:flex; justify-content:space-between; align-items:center;">
+                <a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(v.direccion_destino)}" target="_blank" style="text-decoration:none; color:#2563eb; font-weight:bold; font-size:0.7rem;"><i class="fas fa-map-marked-alt"></i> GOOGLE MAPS</a>
+                ${renderBotonAccionInteligente(v)}
             </div>`;
         
         parent.appendChild(card);
-        setTimeout(() => inicializarMapa(mapId, puntos), 600);
+        setTimeout(() => inicializarMapa(mapId, puntos), 800);
     });
 }
 
 function renderBotonAccionInteligente(v) {
-    if (v.estado === 'finalizado') return '<span style="color:#10b981; font-weight:bold;">✓ CERRADO</span>';
+    if (v.estado === 'finalizado') return '<span style="color:#10b981; font-weight:bold; font-size:0.7rem;">CERRADO</span>';
     if (v.estado === 'disponible') return `<button onclick="updateEstadoViaje(${v.id}, {estado:'aceptado'})" class="btn-step">ACEPTAR</button>`;
-    if (v.estado === 'aceptado') return `<button onclick="updateEstadoViaje(${v.id}, {estado:'en camino', estado_origen:'completado'})" class="btn-step" style="background:#10b981;">LLEGUÉ AL ORIGEN</button>`;
+    if (v.estado === 'aceptado') return `<button onclick="updateEstadoViaje(${v.id}, {estado:'en camino', estado_origen:'completado'})" class="btn-step" style="background:#10b981;">LLEGUÉ</button>`;
 
     if (v.estado === 'en camino') {
         if (v.direccion_parada1 && v.direccion_parada1 !== "null" && v.estado_p1 !== 'completado') {
-            return `<button onclick="updateEstadoViaje(${v.id}, {estado_p1:'completado'})" class="btn-step" style="background:#f37a1f;">FIN PARADA 1</button>`;
+            return `<button onclick="updateEstadoViaje(${v.id}, {estado_p1:'completado'})" class="btn-step" style="background:#f37a1f;">P1 LISTO</button>`;
         }
         if (v.direccion_parada2 && v.direccion_parada2 !== "null" && v.estado_p2 !== 'completado') {
-            return `<button onclick="updateEstadoViaje(${v.id}, {estado_p2:'completado'})" class="btn-step" style="background:#f37a1f;">FIN PARADA 2</button>`;
+            return `<button onclick="updateEstadoViaje(${v.id}, {estado_p2:'completado'})" class="btn-step" style="background:#f37a1f;">P2 LISTO</button>`;
         }
         return `<button onclick="updateEstadoViaje(${v.id}, {estado:'finalizado'})" class="btn-step" style="background:#10b981;">FINALIZAR</button>`;
     }
 }
 
-// --- MAPA CORREGIDO ---
+// --- MAPA CON RUTA ---
 async function inicializarMapa(mapId, puntosRuta) {
     const el = document.getElementById(mapId);
     if (!el) return;
 
     try {
-        const map = L.map(mapId, { zoomControl: false }).setView([-12.046374, -77.042793], 13);
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { attribution: '© CARTO' }).addTo(map);
+        const map = L.map(mapId, { zoomControl: false }).setView([-12.04, -77.04], 13);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
 
-        const coordsParaEncuadre = [];
+        const waypoints = [];
 
-        // Buscar cada punto con un pequeño retraso para evitar bloqueo de API
-        for (const punto of puntosRuta) {
-            const cleanDir = punto.dir.split(',')[0].trim() + ", Lima, Peru"; // Limpieza básica
+        for (const p of puntosRuta) {
+            const cleanDir = p.dir.split(',')[0].trim() + ", Lima, Peru";
             try {
                 const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(cleanDir)}`);
                 const data = await res.json();
                 if (data && data.length > 0) {
-                    const latlng = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+                    const latlng = L.latLng(data[0].lat, data[0].lon);
+                    waypoints.push(latlng);
+                    
+                    // Marcador personalizado
                     L.circleMarker(latlng, {
-                        radius: 8,
-                        fillColor: (punto.status === 'completado' || punto.status === 'finalizado') ? '#10b981' : punto.color,
-                        color: "#fff",
-                        weight: 2,
-                        fillOpacity: 1
-                    }).addTo(map).bindPopup(punto.label);
-                    coordsParaEncuadre.push(latlng);
+                        radius: 7, 
+                        fillColor: (p.status === 'completado' || p.status === 'finalizado') ? '#10b981' : p.color,
+                        color: "#fff", weight: 2, fillOpacity: 1
+                    }).addTo(map).bindPopup(p.label);
                 }
-            } catch (e) { console.error("Error buscando:", cleanDir); }
+            } catch (e) { console.error("Error coordenadas", e); }
         }
 
-        // GPS Conductor
-        if ("geolocation" in navigator) {
-            navigator.geolocation.getCurrentPosition((pos) => {
-                const driverPos = [pos.coords.latitude, pos.coords.longitude];
-                L.marker(driverPos, { icon: L.divIcon({ html: '<i class="fas fa-taxi" style="color:#f37a1f; font-size:18px;"></i>', className: '' }) }).addTo(map);
-                coordsParaEncuadre.push(driverPos);
-                if (coordsParaEncuadre.length > 1) map.fitBounds(coordsParaEncuadre, { padding: [30, 30] });
-            });
-        }
-
-        if (coordsParaEncuadre.length > 0) {
-            map.fitBounds(coordsParaEncuadre, { padding: [40, 40] });
+        // DIBUJAR RUTA
+        if (waypoints.length >= 2) {
+            L.Routing.control({
+                waypoints: waypoints,
+                routeWhileDragging: false,
+                addWaypoints: false,
+                createMarker: function() { return null; }, // Evitar marcadores por defecto del routing
+                lineOptions: { styles: [{ color: '#2563eb', opacity: 0.6, weight: 5 }] },
+                show: false
+            }).addTo(map);
+            
+            const bounds = L.latLngBounds(waypoints);
+            map.fitBounds(bounds, { padding: [30, 30] });
         }
 
         mapsActive[mapId] = map;
-        setTimeout(() => map.invalidateSize(), 300);
-    } catch (e) { console.error("Fallo mapa:", e); }
+        setTimeout(() => map.invalidateSize(), 400);
+    } catch (e) { console.error("Error mapa", e); }
 }
 
 async function updateEstadoViaje(id, datos) {
