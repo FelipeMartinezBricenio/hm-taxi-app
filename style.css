@@ -1,114 +1,33 @@
-:root {
-    --hm-orange: #f37a1f;
-    --hm-navy: #0d1b32;
-    --bg: #f8fafc;
-    --white: #ffffff;
-    --success: #10b981;
-    --danger: #ef4444;
-    --text-main: #1e293b;
-    --text-muted: #64748b;
-    --radius: 16px;
-}
-
-body { 
-    font-family: 'Segoe UI', Roboto, sans-serif; 
-    background: var(--bg); 
-    margin: 0; padding-bottom: 50px;
-    color: var(--text-main);
-}
-
-.main-header { 
-    background: var(--hm-navy); color: white; padding: 15px 20px; 
-    display: flex; justify-content: space-between; align-items: center;
-    position: sticky; top: 0; z-index: 100;
-}
-
 .status-tabs { 
-    display: flex; gap: 10px; padding: 12px; overflow-x: auto;
-    background: white; border-bottom: 1px solid #e2e8f0;
+    display: flex; gap: 10px; padding: 15px; overflow-x: auto; 
+    background: white; border-bottom: 1px solid #e2e8f0; 
 }
-
 .tab-btn { 
-    border: 1px solid #e2e8f0; padding: 8px 18px; border-radius: 25px;
-    background: white; color: var(--text-muted); font-weight: 600; font-size: 0.8rem;
-    white-space: nowrap; cursor: pointer;
+    border: none; padding: 8px 18px; border-radius: 20px; 
+    background: #f1f5f9; color: #64748b; font-weight: 600; 
+    white-space: nowrap; cursor: pointer; 
 }
+.tab-btn.active { background: #f37a1f; color: white; }
 
-.tab-btn.active { 
-    background: var(--hm-orange); color: white; border-color: var(--hm-orange);
-    box-shadow: 0 4px 10px rgba(243, 122, 31, 0.3);
-}
-
-/* Tarjetas de Viaje */
 .viajes-grid { padding: 15px; display: flex; flex-direction: column; gap: 15px; }
 
 .viaje-card { 
-    background: var(--white); border-radius: var(--radius);
-    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-    border: 1px solid #f1f5f9; overflow: hidden;
+    background: white; border-radius: 15px; overflow: hidden; 
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #f1f5f9; 
 }
-
-.v-header { 
-    padding: 12px 15px; background: #fcfcfd;
-    display: flex; justify-content: space-between; align-items: center;
-    border-bottom: 1px solid #f1f5f9;
-}
-
-.monto-badge { color: var(--success); font-weight: 800; font-size: 1.1rem; }
-
-/* Timeline de la Ruta */
+.v-header { padding: 12px 15px; display: flex; justify-content: space-between; border-bottom: 1px solid #f8fafc; background: #fafafa; }
 .v-body { padding: 15px; }
-.ruta-contenedor { position: relative; padding-left: 28px; }
-.ruta-contenedor::before {
-    content: ''; position: absolute; left: 8px; top: 10px; bottom: 10px;
-    width: 2px; background: #e2e8f0;
-}
 
-.ruta-item { position: relative; margin-bottom: 12px; }
-.ruta-item::before {
-    content: ''; position: absolute; left: -25px; top: 4px;
-    width: 12px; height: 12px; border-radius: 50%;
-    background: white; border: 3px solid var(--hm-navy);
-}
+.ruta-contenedor { position: relative; padding-left: 25px; border-left: 2px solid #e2e8f0; margin-left: 10px; }
+.ruta-item { margin-bottom: 15px; position: relative; }
+.ruta-item:last-child { margin-bottom: 0; }
+.ruta-item::before { content: ''; position: absolute; left: -32px; top: 5px; width: 12px; height: 12px; border-radius: 50%; background: #0d1b32; border: 3px solid white; }
+.ruta-item.destino::before { background: #10b981; }
 
-.ruta-item.destino::before { border-color: var(--success); }
-.ruta-item b { display: block; font-size: 0.6rem; color: var(--text-muted); text-transform: uppercase; }
-.ruta-item span { font-size: 0.85rem; font-weight: 500; }
+.ruta-item b { display: block; font-size: 0.65rem; color: #94a3b8; text-transform: uppercase; }
+.ruta-item span { font-size: 0.9rem; font-weight: 500; }
 
-.v-footer { 
-    padding: 10px 15px; background: #f8fafc;
-    display: flex; justify-content: space-between; align-items: center;
-    border-top: 1px solid #eee;
-}
-
-.btn-nav { 
-    background: #2563eb; color: white; padding: 7px 12px;
-    border-radius: 8px; text-decoration: none; font-weight: 600;
-    font-size: 0.75rem; display: flex; align-items: center; gap: 5px;
-}
-
-.btn-step { 
-    border: none; padding: 8px 16px; border-radius: 8px;
-    background: var(--hm-navy); color: white; font-weight: 700; cursor: pointer;
-}
-
-.btn-delete { color: var(--danger); background: #fee2e2; border: none; padding: 8px; border-radius: 8px; }
-
-/* Botón Flotante */
-.fab-button {
-    position: fixed; bottom: 25px; right: 20px;
-    width: 60px; height: 60px; background: var(--hm-orange);
-    color: white; border-radius: 50%; border: none;
-    box-shadow: 0 8px 20px rgba(243, 122, 31, 0.4);
-    font-size: 24px; display: flex; align-items: center; justify-content: center;
-    z-index: 99;
-}
-
-/* Modales */
-.modal { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 20px; }
-.modal-content { background: white; padding: 20px; border-radius: 20px; width: 100%; max-width: 380px; }
-.f-item { display: flex; flex-direction: column; margin-bottom: 10px; }
-.f-item input, .f-item select { padding: 10px; border: 1px solid #e2e8f0; border-radius: 10px; margin-top: 4px; }
-.modal-actions { display: flex; gap: 10px; margin-top: 15px; }
-.btn-save { background: var(--success); color: white; border: none; padding: 12px; border-radius: 10px; font-weight: bold; flex: 1; }
-.btn-cancel { background: #eee; color: #666; border: none; padding: 12px; border-radius: 10px; font-weight: bold; flex: 1; }
+.v-footer { padding: 12px 15px; background: #f8fafc; display: flex; justify-content: space-between; align-items: center; }
+.btn-nav { background: #2563eb; color: white; padding: 8px 12px; border-radius: 8px; text-decoration: none; font-size: 0.8rem; font-weight: bold; }
+.btn-step { border: none; padding: 10px 18px; border-radius: 8px; background: #0d1b32; color: white; font-weight: bold; cursor: pointer; }
+.btn-delete { color: #ef4444; background: #fee2e2; border: none; padding: 8px; border-radius: 8px; }
