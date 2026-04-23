@@ -71,7 +71,7 @@ function renderLista(viajes, parent) {
 
     viajes.forEach(v => {
         const puntos = [];
-        if (v.direccion_origen) puntos.push({ label: 'Origen', dir: v.direccion_origen, status: 'completado' });
+        if (v.direccion_origen) puntos.push({ label: 'Origen', dir: v.direccion_origen, status: v.estado_origen });
         if (v.direccion_parada1 && v.direccion_parada1 !== "null") puntos.push({ label: 'Parada 1', dir: v.direccion_parada1, precio: v.monto_p1, status: v.estado_p1 });
         if (v.direccion_parada2 && v.direccion_parada2 !== "null") puntos.push({ label: 'Parada 2', dir: v.direccion_parada2, precio: v.monto_p2, status: v.estado_p2 });
         if (v.direccion_destino) puntos.push({ label: 'Destino', dir: v.direccion_destino, status: v.estado });
@@ -89,7 +89,7 @@ function renderLista(viajes, parent) {
                 <div style="border-left:2px solid #e2e8f0; margin-left:10px; padding-left:20px; position:relative;">
                     ${puntos.map((p, idx) => `
                         <div style="margin-bottom:12px; position:relative;">
-                            <div style="position:absolute; left:-27px; top:4px; width:12px; height:12px; border-radius:50%; background:${(p.status === 'completado' || p.status === 'finalizado') ? '#10b981' : '#0d1b32'}; border:2px solid #fff; box-shadow:0 0 4px rgba(0,0,0,0.2);"></div>
+                            <div style="position:absolute; left:-27px; top:4px; width:12px; height:12px; border-radius:50%; background:${(p.status === 'completado' || p.status === 'finalizado') ? '#10b981' : '#0d1b32'}; border:2px solid #fff;"></div>
                             <div style="display:flex; justify-content:space-between; align-items:flex-start;">
                                 <div style="flex:1;">
                                     <b style="font-size:0.65rem; color:#94a3b8; text-transform:uppercase;">${p.label} ${p.status === 'completado' ? '✓' : ''}</b>
@@ -116,14 +116,18 @@ function renderBotonAccionInteligente(v) {
     if (v.estado === 'finalizado') return '<span style="color:#10b981; font-weight:bold; font-size:0.8rem;">✓ CERRADO</span>';
     
     if (v.estado === 'disponible') return `<button onclick="updateEstadoGeneral(${v.id}, 'aceptado')" class="btn-step" style="background:var(--hm-navy);">ACEPTAR</button>`;
-    if (v.estado === 'aceptado') return `<button onclick="updateEstadoGeneral(${v.id}, 'en camino')" class="btn-step" style="background:var(--hm-navy);">EN CAMINO</button>`;
+    
+    // Si el chofer ya aceptó pero no ha llegado al origen
+    if (v.estado === 'aceptado') {
+        return `<button onclick="confirmarLlegadaOrigen(${v.id})" class="btn-step" style="background:#10b981;">LLEGUÉ AL ORIGEN</button>`;
+    }
 
     if (v.estado === 'en camino') {
         if (v.direccion_parada1 && v.direccion_parada1 !== "null" && v.estado_p1 !== 'completado') {
-            return `<button onclick="updateEstadoParada(${v.id}, 'estado_p1', 'completado')" class="btn-step" style="background:#f37a1f;">FIN PARADA 1</button>`;
+            return `<button onclick="updateEstadoViaje(${v.id}, {estado_p1: 'completado'})" class="btn-step" style="background:#f37a1f;">FIN PARADA 1</button>`;
         }
         if (v.direccion_parada2 && v.direccion_parada2 !== "null" && v.estado_p2 !== 'completado') {
-            return `<button onclick="updateEstadoParada(${v.id}, 'estado_p2', 'completado')" class="btn-step" style="background:#f37a1f;">FIN PARADA 2</button>`;
+            return `<button onclick="updateEstadoViaje(${v.id}, {estado_p2: 'completado'})" class="btn-step" style="background:#f37a1f;">FIN PARADA 2</button>`;
         }
         return `<button onclick="updateEstadoGeneral(${v.id}, 'finalizado')" class="btn-step" style="background:#10b981;">FINALIZAR</button>`;
     }
@@ -131,26 +135,29 @@ function renderBotonAccionInteligente(v) {
 
 // --- ACTUALIZACIONES ---
 async function updateEstadoGeneral(id, nuevo) {
+    await updateEstadoViaje(id, { estado: nuevo });
+}
+
+async function confirmarLlegadaOrigen(id) {
+    // Al confirmar origen, pasamos el estado a 'en camino' y el origen a 'completado'
+    await updateEstadoViaje(id, { estado: 'en camino', estado_origen: 'completado' });
+}
+
+async function updateEstadoViaje(id, datos) {
     await fetch(`${SUPABASE_URL}/rest/v1/viajes?id=eq.${id}`, {
         method: 'PATCH',
         headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ estado: nuevo })
+        body: JSON.stringify(datos)
     });
     fetchViajes();
 }
 
 async function updateEstadoParada(id, columna, valor) {
-    let updateData = {};
-    updateData[columna] = valor;
-    await fetch(`${SUPABASE_URL}/rest/v1/viajes?id=eq.${id}`, {
-        method: 'PATCH',
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify(updateData)
-    });
-    fetchViajes();
+    let obj = {}; obj[columna] = valor;
+    await updateEstadoViaje(id, obj);
 }
 
-// --- MAPA DINÁMICO REFORZADO ---
+// --- MAPA ---
 async function inicializarMapa(mapId, puntosRuta) {
     const el = document.getElementById(mapId);
     if (!el) return;
@@ -189,7 +196,7 @@ async function inicializarMapa(mapId, puntosRuta) {
     } catch (e) { console.error("Error mapa:", e); }
 }
 
-// --- ADMIN Y FORMULARIO ---
+// --- FORMULARIO ADMIN ---
 async function cargarChoferesFormulario() {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/usuarios?rol=eq.chofer`, {
         headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
@@ -204,14 +211,15 @@ async function guardarNuevoViaje() {
         chofer: document.getElementById('reg-chofer').value,
         monto: parseFloat(document.getElementById('reg-monto').value) || 0,
         direccion_origen: document.getElementById('reg-origen').value,
+        estado_origen: 'pendiente',
         direccion_parada1: document.getElementById('reg-p1').value || null,
         monto_p1: parseFloat(document.getElementById('reg-monto-p1').value) || 0,
+        estado_p1: 'pendiente',
         direccion_parada2: document.getElementById('reg-p2').value || null,
         monto_p2: parseFloat(document.getElementById('reg-monto-p2').value) || 0,
+        estado_p2: 'pendiente',
         direccion_destino: document.getElementById('reg-destino').value,
         estado: 'disponible',
-        estado_p1: 'pendiente',
-        estado_p2: 'pendiente',
         fecha: new Date().toLocaleDateString('es-PE')
     };
     
