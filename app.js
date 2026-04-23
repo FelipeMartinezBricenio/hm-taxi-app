@@ -71,10 +71,10 @@ function renderLista(viajes, parent) {
 
     viajes.forEach(v => {
         const puntos = [];
-        if (v.direccion_origen) puntos.push({ label: 'Origen', dir: v.direccion_origen, status: v.estado_origen });
-        if (v.direccion_parada1 && v.direccion_parada1 !== "null") puntos.push({ label: 'Parada 1', dir: v.direccion_parada1, precio: v.monto_p1, status: v.estado_p1 });
-        if (v.direccion_parada2 && v.direccion_parada2 !== "null") puntos.push({ label: 'Parada 2', dir: v.direccion_parada2, precio: v.monto_p2, status: v.estado_p2 });
-        if (v.direccion_destino) puntos.push({ label: 'Destino', dir: v.direccion_destino, status: v.estado });
+        if (v.direccion_origen) puntos.push({ label: 'Origen', dir: v.direccion_origen, status: v.estado_origen, color: '#0d1b32' });
+        if (v.direccion_parada1 && v.direccion_parada1 !== "null") puntos.push({ label: 'Parada 1', dir: v.direccion_parada1, precio: v.monto_p1, status: v.estado_p1, color: '#0d1b32' });
+        if (v.direccion_parada2 && v.direccion_parada2 !== "null") puntos.push({ label: 'Parada 2', dir: v.direccion_parada2, precio: v.monto_p2, status: v.estado_p2, color: '#0d1b32' });
+        if (v.direccion_destino) puntos.push({ label: 'Destino', dir: v.direccion_destino, status: v.estado, color: '#ef4444' });
 
         const card = document.createElement('div');
         card.style.background = "#fff"; card.style.borderRadius = "20px"; card.style.boxShadow = "0 4px 15px rgba(0,0,0,0.08)"; card.style.overflow = "hidden";
@@ -89,58 +89,93 @@ function renderLista(viajes, parent) {
                 <div style="border-left:2px solid #e2e8f0; margin-left:10px; padding-left:20px; position:relative;">
                     ${puntos.map((p, idx) => `
                         <div style="margin-bottom:12px; position:relative;">
-                            <div style="position:absolute; left:-27px; top:4px; width:12px; height:12px; border-radius:50%; background:${(p.status === 'completado' || p.status === 'finalizado') ? '#10b981' : '#0d1b32'}; border:2px solid #fff;"></div>
+                            <div style="position:absolute; left:-27px; top:4px; width:12px; height:12px; border-radius:50%; background:${(p.status === 'completado' || p.status === 'finalizado') ? '#10b981' : p.color}; border:2px solid #fff;"></div>
                             <div style="display:flex; justify-content:space-between; align-items:flex-start;">
                                 <div style="flex:1;">
                                     <b style="font-size:0.65rem; color:#94a3b8; text-transform:uppercase;">${p.label} ${p.status === 'completado' ? '✓' : ''}</b>
-                                    <div style="font-size:0.85rem; font-weight:500; color:${p.status === 'completado' ? '#94a3b8' : '#334155'};">${p.dir}</div>
+                                    <div style="font-size:0.85rem; font-weight:500;">${p.dir}</div>
                                 </div>
                                 ${p.precio > 0 ? `<span style="font-size:0.75rem; font-weight:bold; color:#64748b; background:#f1f5f9; padding:2px 6px; border-radius:6px; margin-left:8px;">+ S/ ${p.precio}</span>` : ''}
                             </div>
                         </div>
                     `).join('')}
                 </div>
-                <div id="${mapId}" style="height:200px; width:100%; border-radius:15px; margin-top:10px; background:#f8fafc; border:1px solid #e2e8f0;"></div>
+                <div id="${mapId}" style="height:200px; width:100%; border-radius:15px; margin-top:10px; background:#f8fafc; border:1px solid #e2e8f0; z-index:1;"></div>
             </div>
-            <div style="padding:12px; background:#f8fafc; display:flex; justify-content:space-between; align-items:center;">
-                <a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(v.direccion_destino)}" target="_blank" style="text-decoration:none; background:#2563eb; color:white; padding:10px 15px; border-radius:10px; font-weight:bold; font-size:0.75rem;"><i class="fas fa-location-arrow"></i> NAVEGAR</a>
+            <div style="padding:12px; background:#f8fafc; display:flex; justify-content:space-between;">
+                <a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(v.direccion_destino)}" target="_blank" style="text-decoration:none; background:#2563eb; color:white; padding:10px 15px; border-radius:10px; font-weight:bold; font-size:0.75rem;">GOOGLE MAPS</a>
                 <div>${renderBotonAccionInteligente(v)}</div>
             </div>`;
         
         parent.appendChild(card);
-        setTimeout(() => inicializarMapa(mapId, puntos), 500);
+        setTimeout(() => inicializarMapa(mapId, puntos), 600);
     });
 }
 
 function renderBotonAccionInteligente(v) {
-    if (v.estado === 'finalizado') return '<span style="color:#10b981; font-weight:bold; font-size:0.8rem;">✓ CERRADO</span>';
-    
-    if (v.estado === 'disponible') return `<button onclick="updateEstadoGeneral(${v.id}, 'aceptado')" class="btn-step" style="background:var(--hm-navy);">ACEPTAR</button>`;
-    
-    // Si el chofer ya aceptó pero no ha llegado al origen
-    if (v.estado === 'aceptado') {
-        return `<button onclick="confirmarLlegadaOrigen(${v.id})" class="btn-step" style="background:#10b981;">LLEGUÉ AL ORIGEN</button>`;
-    }
+    if (v.estado === 'finalizado') return '<span style="color:#10b981; font-weight:bold;">✓ CERRADO</span>';
+    if (v.estado === 'disponible') return `<button onclick="updateEstadoViaje(${v.id}, {estado:'aceptado'})" class="btn-step">ACEPTAR</button>`;
+    if (v.estado === 'aceptado') return `<button onclick="updateEstadoViaje(${v.id}, {estado:'en camino', estado_origen:'completado'})" class="btn-step" style="background:#10b981;">LLEGUÉ AL ORIGEN</button>`;
 
     if (v.estado === 'en camino') {
         if (v.direccion_parada1 && v.direccion_parada1 !== "null" && v.estado_p1 !== 'completado') {
-            return `<button onclick="updateEstadoViaje(${v.id}, {estado_p1: 'completado'})" class="btn-step" style="background:#f37a1f;">FIN PARADA 1</button>`;
+            return `<button onclick="updateEstadoViaje(${v.id}, {estado_p1:'completado'})" class="btn-step" style="background:#f37a1f;">FIN PARADA 1</button>`;
         }
         if (v.direccion_parada2 && v.direccion_parada2 !== "null" && v.estado_p2 !== 'completado') {
-            return `<button onclick="updateEstadoViaje(${v.id}, {estado_p2: 'completado'})" class="btn-step" style="background:#f37a1f;">FIN PARADA 2</button>`;
+            return `<button onclick="updateEstadoViaje(${v.id}, {estado_p2:'completado'})" class="btn-step" style="background:#f37a1f;">FIN PARADA 2</button>`;
         }
-        return `<button onclick="updateEstadoGeneral(${v.id}, 'finalizado')" class="btn-step" style="background:#10b981;">FINALIZAR</button>`;
+        return `<button onclick="updateEstadoViaje(${v.id}, {estado:'finalizado'})" class="btn-step" style="background:#10b981;">FINALIZAR</button>`;
     }
 }
 
-// --- ACTUALIZACIONES ---
-async function updateEstadoGeneral(id, nuevo) {
-    await updateEstadoViaje(id, { estado: nuevo });
-}
+// --- MAPA CORREGIDO ---
+async function inicializarMapa(mapId, puntosRuta) {
+    const el = document.getElementById(mapId);
+    if (!el) return;
 
-async function confirmarLlegadaOrigen(id) {
-    // Al confirmar origen, pasamos el estado a 'en camino' y el origen a 'completado'
-    await updateEstadoViaje(id, { estado: 'en camino', estado_origen: 'completado' });
+    try {
+        const map = L.map(mapId, { zoomControl: false }).setView([-12.046374, -77.042793], 13);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { attribution: '© CARTO' }).addTo(map);
+
+        const coordsParaEncuadre = [];
+
+        // Buscar cada punto con un pequeño retraso para evitar bloqueo de API
+        for (const punto of puntosRuta) {
+            const cleanDir = punto.dir.split(',')[0].trim() + ", Lima, Peru"; // Limpieza básica
+            try {
+                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(cleanDir)}`);
+                const data = await res.json();
+                if (data && data.length > 0) {
+                    const latlng = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+                    L.circleMarker(latlng, {
+                        radius: 8,
+                        fillColor: (punto.status === 'completado' || punto.status === 'finalizado') ? '#10b981' : punto.color,
+                        color: "#fff",
+                        weight: 2,
+                        fillOpacity: 1
+                    }).addTo(map).bindPopup(punto.label);
+                    coordsParaEncuadre.push(latlng);
+                }
+            } catch (e) { console.error("Error buscando:", cleanDir); }
+        }
+
+        // GPS Conductor
+        if ("geolocation" in navigator) {
+            navigator.geolocation.getCurrentPosition((pos) => {
+                const driverPos = [pos.coords.latitude, pos.coords.longitude];
+                L.marker(driverPos, { icon: L.divIcon({ html: '<i class="fas fa-taxi" style="color:#f37a1f; font-size:18px;"></i>', className: '' }) }).addTo(map);
+                coordsParaEncuadre.push(driverPos);
+                if (coordsParaEncuadre.length > 1) map.fitBounds(coordsParaEncuadre, { padding: [30, 30] });
+            });
+        }
+
+        if (coordsParaEncuadre.length > 0) {
+            map.fitBounds(coordsParaEncuadre, { padding: [40, 40] });
+        }
+
+        mapsActive[mapId] = map;
+        setTimeout(() => map.invalidateSize(), 300);
+    } catch (e) { console.error("Fallo mapa:", e); }
 }
 
 async function updateEstadoViaje(id, datos) {
@@ -152,51 +187,6 @@ async function updateEstadoViaje(id, datos) {
     fetchViajes();
 }
 
-async function updateEstadoParada(id, columna, valor) {
-    let obj = {}; obj[columna] = valor;
-    await updateEstadoViaje(id, obj);
-}
-
-// --- MAPA ---
-async function inicializarMapa(mapId, puntosRuta) {
-    const el = document.getElementById(mapId);
-    if (!el) return;
-
-    try {
-        const map = L.map(mapId, { zoomControl: false }).setView([-12.046374, -77.042793], 13);
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { attribution: '© CARTO' }).addTo(map);
-
-        const coordsParaEncuadre = [];
-
-        for (const punto of puntosRuta) {
-            try {
-                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(punto.dir + ", Lima, Peru")}`);
-                const data = await res.json();
-                if (data && data.length > 0) {
-                    const coord = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
-                    L.marker(coord).addTo(map).bindPopup(punto.label);
-                    coordsParaEncuadre.push(coord);
-                }
-            } catch (err) { console.warn("Error geocoding: " + punto.dir); }
-        }
-
-        if ("geolocation" in navigator) {
-            navigator.geolocation.getCurrentPosition((pos) => {
-                const driverCoord = [pos.coords.latitude, pos.coords.longitude];
-                const taxiIcon = L.divIcon({ html: '<i class="fas fa-taxi" style="color:#f37a1f; font-size:20px; text-shadow:0 0 3px #fff;"></i>', className: '' });
-                L.marker(driverCoord, { icon: taxiIcon }).addTo(map);
-                coordsParaEncuadre.push(driverCoord);
-                if (coordsParaEncuadre.length > 0) map.fitBounds(coordsParaEncuadre, { padding: [40, 40] });
-            }, null, { enableHighAccuracy: true });
-        }
-
-        if (coordsParaEncuadre.length > 0) map.fitBounds(coordsParaEncuadre, { padding: [40, 40] });
-        mapsActive[mapId] = map;
-        setTimeout(() => map.invalidateSize(), 400);
-    } catch (e) { console.error("Error mapa:", e); }
-}
-
-// --- FORMULARIO ADMIN ---
 async function cargarChoferesFormulario() {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/usuarios?rol=eq.chofer`, {
         headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
@@ -222,7 +212,6 @@ async function guardarNuevoViaje() {
         estado: 'disponible',
         fecha: new Date().toLocaleDateString('es-PE')
     };
-    
     await fetch(`${SUPABASE_URL}/rest/v1/viajes`, {
         method: 'POST',
         headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
